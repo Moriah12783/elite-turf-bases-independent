@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
+import { Script, createContext } from 'node:vm';
 import { buildSnapshot, canonical, containsAllBases, officialResult, parseProno, proposalState,
   quinteCourses, sha256, PMU_ROOT, PRONO_URL } from '../src/core.ts';
 import { collect, readSource } from '../src/collector.ts';
@@ -192,4 +193,28 @@ test('private routes fail closed, health reveals no records and cross-origin POS
   const page=await worker.fetch(req('/',{Authorization:'Bearer '+TOKEN}),env,ctx);
   assert.equal(page.status,200);assert.equal(page.headers.get('Cache-Control'),'no-store');
   assert.ok(page.headers.get('Content-Security-Policy')?.includes("default-src 'none'"));
+});
+
+test('delivered dashboard script executes and renders counters, races and multiline run history',async()=>{
+  const page=await worker.fetch(new Request('https://bases.example/',{headers:{Authorization:'Bearer '+TOKEN}}),{ADMIN_TOKEN:TOKEN},{});
+  const html=await page.text();
+  const script=html.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1];
+  assert.ok(script);
+  const element=()=>({textContent:'',href:'',children:[],replaceChildren(){this.children=[];},append(child){this.children.push(child);}});
+  const ids=['observations','eligible','courses','races','runs','export','collect','refresh','message'];
+  const elements=Object.fromEntries(ids.map(id=>[id,element()]));
+  const payload={totals:{observations:3,eligible:2,qualified_races:1},latest:[{race_id:RID,edition:'T_MATIN',observed_at:NOW,selection8:[8,2,3,4,5,6,7,1],eligible:true,reasons:[]}],
+    runs:[{started_at:NOW,status:'OK',details_json:'{}'},{started_at:START,status:'OK',details_json:'{}'}]};
+  let requests=0;
+  const context=createContext({document:{getElementById:id=>elements[id],createElement:element},fetch:async url=>{
+    assert.equal(url,'/api/status');requests++;return {ok:true,json:async()=>payload};
+  }});
+  new Script(script).runInContext(context);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(elements.observations.textContent,3);assert.equal(elements.eligible.textContent,2);assert.equal(elements.courses.textContent,1);
+  assert.equal(elements.races.children.length,1);assert.equal(elements.races.children[0].children[0].textContent,RID);
+  assert.equal(elements.runs.textContent,`${NOW} OK {}\n${START} OK {}`);
+  assert.match(elements.export.href,/^\/api\/export\?date=\d{4}-\d{2}-\d{2}$/);
+  await elements.refresh.onclick();assert.equal(requests,2);
+  assert.equal(elements.message.textContent,'');
 });

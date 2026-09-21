@@ -36,7 +36,7 @@ async function overview(db: D1Database): Promise<unknown> {
 }
 function dashboard(): Response {
   const nonce = crypto.randomUUID();
-  const html = `<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  const html = String.raw`<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Elite Turf — Atelier des bases</title><style nonce="${nonce}">
 :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101b21;color:#e9f2ef}body{max-width:1080px;margin:40px auto;padding:0 20px}h1{font-size:32px;margin-bottom:8px}.muted{color:#a9bcb5}header{border-bottom:1px solid #31443e;padding-bottom:24px}main{display:grid;gap:20px;margin-top:24px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card,section{background:#192a30;border:1px solid #31443e;border-radius:12px;padding:20px}.value{font-size:30px;color:#9bd8b1}button,a{color:#b7e9c6}button{background:#244e3b;border:1px solid #4e805e;padding:12px;border-radius:6px;cursor:pointer}table{width:100%;border-collapse:collapse;font-size:14px}td,th{text-align:left;padding:12px 6px;border-bottom:1px solid #31443e}pre{white-space:pre-wrap;font-size:13px}.good{color:#9bd8b1}.warn{color:#f1c887}@media(max-width:650px){.cards{grid-template-columns:1fr}.wide{overflow-x:auto}}
 </style><header><p class="muted">ELITE TURF · ESPACE PRIVÉ</p><h1>Atelier des bases Quinté+</h1><p>Phase 1 — Collecte indépendante</p><p class="muted">Moteur et Marché observés en lecture seule. Radar : branchement ultérieur.</p></header>
