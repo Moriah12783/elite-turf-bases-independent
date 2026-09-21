@@ -1,0 +1,9 @@
+node_modules/
+.wrangler/
+dist/
+.dev.vars*
+*.db
+*.db-*
+*.log
+worker-configuration.d.ts
+private/
