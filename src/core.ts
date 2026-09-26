@@ -1,6 +1,6 @@
 /** Pure external-source adapters. Never import or run a producer's code. */
 export type ObjectData = Record<string, unknown>;
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 export const PRONO_URL = 'https://prono.elite-turf.fr/';
 export const PMU_ROOT = 'https://online.turfinfo.api.pmu.fr/rest/client/7/programme';
 export const MAX_BYTES = 12 * 1024 * 1024;
@@ -178,7 +178,7 @@ export function buildSnapshot(course: Course, prono: ObjectData | null, particip
       priced_ratio: number(entry.priced_ratio), odds_real: entry.odds_real === true } };
 }
 
-export interface OfficialResult { schema: string; race_id: string; status: string; ranking: number[][]; non_partants: number[]; finality: string }
+export interface OfficialResult { schema: string; race_id: string; status: string; ranking: number[][]; non_partants: number[]; non_partants_known?: boolean; finality: string }
 export function officialResult(course: Course, participants?: unknown): OfficialResult | null {
   const raw = course.raw, status = str(raw.statut);
   if (status === 'COURSE_ANNULEE' || status === 'ANNULEE') return { schema: 'elite-bases-result-v1', race_id: course.race_id,
@@ -186,11 +186,18 @@ export function officialResult(course: Course, participants?: unknown): Official
   const ranking = array(raw.ordreArrivee).map(numbers);
   const flat = ranking.flat();
   if (!ranking.length || ranking.some(r => !r.length) || new Set(flat).size !== flat.length) return null;
-  const verified = (raw.arriveeDefinitive === true || raw.isArriveeDefinitive === true) && status.startsWith('ARRIVEE_DEFINITIVE');
+  // PMU also uses FIN_COURSE with explicit definitive-arrival flags (e.g. Compiègne).
+  // FIN_COURSE alone, or contradictory explicit flags, cannot certify finality.
+  const definitiveFlag = raw.arriveeDefinitive === true || raw.isArriveeDefinitive === true;
+  const contradictory = raw.arriveeDefinitive === false || raw.isArriveeDefinitive === false;
+  const verified = definitiveFlag && !contradictory &&
+    (status.startsWith('ARRIVEE_DEFINITIVE') || status === 'FIN_COURSE');
   const non_partants = array(object(participants).participants).map(object)
     .filter(p => p.nonPartant === true || str(p.statut) === 'NON_PARTANT').map(p => number(p.numPmu)).filter((n): n is number => n !== null);
   return { schema: 'elite-bases-result-v1', race_id: course.race_id, status: verified && flat.length >= 5 ? 'DEFINITIVE' : 'PROVISIONAL',
-    ranking, non_partants, finality: verified ? 'PMU_VERIFIED' : 'NOT_VERIFIED' };
+    ranking, non_partants, non_partants_known: array(object(participants).participants).length>0 &&
+      flat.every(n=>array(object(participants).participants).some(p=>number(object(p).numPmu)===n)),
+    finality: verified ? 'PMU_VERIFIED' : 'NOT_VERIFIED' };
 }
 export function containsAllBases(result: OfficialResult, bases: number[]): boolean | null {
   if (result.status !== 'DEFINITIVE' || ![3, 4].includes(bases.length) || new Set(bases).size !== bases.length) return null;

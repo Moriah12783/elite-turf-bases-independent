@@ -1,4 +1,5 @@
 import { canonical, sha256, type ObjectData, type OfficialResult, type Snapshot } from './core.ts';
+import type { Model, Proposal } from './selector.ts';
 
 export interface RawSource { kind: string; value: unknown }
 export async function gzip(text: string): Promise<ArrayBuffer> {
@@ -14,7 +15,7 @@ export async function sourcesToStore(raw: RawSource[]): Promise<{hash: string; k
     return { hash: await sha256(text), kind: s.kind, bytes: await gzip(text) };
   }));
 }
-export async function saveObservation(db: D1Database, snapshot: Snapshot, sources: Awaited<ReturnType<typeof sourcesToStore>>): Promise<void> {
+export async function saveObservation(db: D1Database, snapshot: Snapshot, sources: Awaited<ReturnType<typeof sourcesToStore>>): Promise<string> {
   const text = canonical(snapshot), hash = await sha256(text);
   // D1 batch is transactional. A failure cannot leave a partially stored observation.
   const statements = sources.map(s => db.prepare(`INSERT INTO source_blobs(hash,kind,payload_gzip)
@@ -24,6 +25,28 @@ export async function saveObservation(db: D1Database, snapshot: Snapshot, source
     .bind(hash,snapshot.race_id,snapshot.race_date,snapshot.edition,snapshot.observed_at,snapshot.start_at,
       snapshot.eligible ? 1 : 0,canonical(snapshot.reasons),hash,text,hash));
   await db.batch(statements);
+  return hash;
+}
+export async function saveModel(db:D1Database,model:Model):Promise<void> {
+  const payload=canonical(model),hash=await sha256(payload);
+  const existing=await db.prepare('SELECT payload_hash FROM models WHERE id=?').bind(model.id).first<{payload_hash:string}>();
+  if(existing){if(existing.payload_hash!==hash)throw Error('MODEL_ID_COLLISION');return;}
+  await db.prepare('INSERT INTO models(id,trained_at,payload_hash,payload_json) SELECT ?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM models WHERE id=?)')
+    .bind(model.id,model.trained_at,hash,payload,model.id).run();
+}
+export async function saveProposal(db:D1Database,proposal:Proposal):Promise<boolean> {
+  const payload=canonical(proposal),hash=await sha256(payload);
+  const existing=await db.prepare('SELECT id FROM proposals WHERE observation_id=? AND model_id=?')
+    .bind(proposal.observation_id,proposal.model_id).first();
+  if(existing)return false;
+  await db.prepare(`INSERT INTO proposals(id,race_id,observation_id,model_id,created_at,start_at,status,valid_until,payload_hash,payload_json)
+    VALUES(?,?,?,?,?,?,?,?,?,?)`).bind(hash,proposal.race_id,proposal.observation_id,proposal.model_id,
+      proposal.created_at,proposal.start_at,proposal.status,proposal.valid_until,hash,payload).run();
+  return true;
+}
+export async function verifiedPayload<T>(row:{payload_hash:string;payload_json:string}):Promise<T> {
+  if(await sha256(row.payload_json)!==row.payload_hash)throw Error('ARCHIVE_HASH_MISMATCH');
+  return JSON.parse(row.payload_json) as T;
 }
 export async function saveResult(db: D1Database, result: OfficialResult, observed: string, source: ObjectData): Promise<boolean> {
   const payload = { result, source }, text = canonical(payload), hash = await sha256(text);

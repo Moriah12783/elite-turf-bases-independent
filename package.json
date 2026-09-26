@@ -1,6 +1,6 @@
 {
   "name": "elite-turf-bases-independent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -13,7 +13,8 @@
     "lint": "eslint src",
     "build": "wrangler deploy --dry-run --outdir dist",
     "dev": "wrangler dev --local",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "train": "node scripts/train.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "5.20260921.1",

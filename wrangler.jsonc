@@ -7,7 +7,7 @@
   "workers_dev": true,
   "preview_urls": false,
   "observability": { "enabled": true, "head_sampling_rate": 1 },
-  "vars": { "COLLECTION_ENABLED": "true", "SERVICE_MODE": "COLLECT_ONLY" },
+  "vars": { "COLLECTION_ENABLED": "true", "SERVICE_MODE": "EXPERIMENTAL" },
   "d1_databases": [{ "binding": "DB", "database_name": "elite-turf-bases-independent", "database_id": "519db9e9-5609-4f9d-8e89-76750da074f0", "migrations_dir": "migrations" }],
   "triggers": { "crons": ["7,17,27,37,47,57 6-22 * * *"] }
 }

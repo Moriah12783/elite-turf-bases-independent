@@ -9,56 +9,7 @@ import { collect, readSource } from '../src/collector.ts';
 import { gzip, gunzip, lock, saveObservation, saveResult, sourcesToStore, verifyObservation } from '../src/storage.ts';
 import worker, {authenticated} from '../src/worker.ts';
 
-const NOW='2026-09-21T12:00:00.000Z', START='2026-09-21T13:00:00.000Z';
-const RID='R1C1_21092026_TESTVILLE';
-const TOKEN='test-token-only-012345678901234567890123456789';
-function fixtures() {
-  const c={numOrdre:1,heureDepart:Date.parse(START),statut:'PROGRAMMEE',discipline:'TROT_ATTELE',distance:2700,
-    paris:[{codePari:'QUINTE_PLUS'}],corde:'GAUCHE'};
-  const programme={programme:{reunions:[{numOfficiel:1,hippodrome:{libelleCourt:'TESTVILLE'},pays:{code:'FRA'},courses:[c]}]}};
-  const row={race_id:RID,date:'2026-09-21',display_horizon:'T_MATIN',sel_moteur_list:[8,2,3,4,5,6,7,1],
-    editions_moteur:{T_MATIN:{sel:'8-2-3-4-5-6-7-1',lock:'08:30',odds_real:true,priced_ratio:1}},
-    editions_marche:{T_MATIN:{sel:'1-2-3-4-5-6-7-8'}},publishable:true,is_no_bet:false,
-    contract_recorded:true,np_nums:[],runners:Array.from({length:10},(_,i)=>({num:i+1,prob_pct:10,value_index:1}))};
-  const parts={participants:Array.from({length:10},(_,i)=>({numPmu:i+1,nom:'Cheval '+(i+1),statut:'PARTANT',
-    musique:'1a2a3a',driver:'DRIVER',entraineur:'TRAINER',dernierRapportDirect:{rapport:3+i},dernierRapportReference:{rapport:4+i}}))};
-  const receipts=[{url:PRONO_URL,received_at:NOW,response_sha256:'test',http_date:null}];
-  const course=quinteCourses(programme,'2026-09-21')[0];
-  return {c,programme,row,parts,receipts,course};
-}
-function snapshot() {const f=fixtures();return buildSnapshot(f.course,f.row,f.parts,f.receipts,NOW,{});}
-
-/** SQLite-backed minimal implementation of the D1 methods used by the service. */
-class LocalD1 {
-  sqlite=new DatabaseSync(':memory:');
-  constructor(){this.sqlite.exec(readFileSync(new URL('../migrations/0001_independent.sql',import.meta.url),'utf8'));}
-  prepare(sql:string){return new Statement(this,sql,[]);}
-  async batch(statements:Statement[]){
-    this.sqlite.exec('BEGIN');
-    try{const out=[];for(const s of statements)out.push(await s.run());this.sqlite.exec('COMMIT');return out;}
-    catch(e){this.sqlite.exec('ROLLBACK');throw e;}
-  }
-}
-class Statement {
-  db:LocalD1; sql:string; args:unknown[];
-  constructor(db:LocalD1,sql:string,args:unknown[]){this.db=db;this.sql=sql;this.args=args;}
-  bind(...args:unknown[]){return new Statement(this.db,this.sql,args);}
-  values(){return this.args.map(a=>a instanceof ArrayBuffer?new Uint8Array(a):a);}
-  async run(){const v=this.db.sqlite.prepare(this.sql).run(...this.values());return {success:true,meta:{changes:Number(v.changes)},results:[]};}
-  async first(){return this.db.sqlite.prepare(this.sql).get(...this.values())??null;}
-  async all(){return {success:true,results:this.db.sqlite.prepare(this.sql).all(...this.values())};}
-}
-function liveFake(f=fixtures()){
-  const calls:string[]=[];
-  const fetcher=async(url:string,init:RequestInit)=>{
-    calls.push(url);assert.equal(init.method,'GET');assert.equal(init.redirect,'manual');
-    if(url===PRONO_URL)return new Response('<script>let allLogs = '+JSON.stringify([f.row])+';</script>');
-    if(url.endsWith('/participants'))return Response.json(f.parts);
-    if(url===PMU_ROOT+'/21092026')return Response.json(f.programme);
-    return Response.json({programme:{reunions:[]}});
-  };
-  return {calls,fetcher};
-}
+import { NOW, START, RID, TOKEN, fixtures, snapshot, LocalD1, liveFake } from './helpers.ts';
 
 test('safe JSON extraction never executes received scripts and handles brackets in strings',()=>{
   const row={name:'a ] } \\" text'};
@@ -167,7 +118,7 @@ test('full collection uses only existing GET sources and an isolated database',a
 test('already finished races collect labels only, never manufactured historical features',async()=>{
   const f=fixtures();Object.assign(f.c,{heureDepart:Date.parse(NOW)-60_000,statut:'ARRIVEE_DEFINITIVE_COMPLETE',arriveeDefinitive:true,ordreArrivee:[[1],[2],[3],[4],[5]]});
   const db=new LocalD1(),fake=liveFake(f),report=await collect(db,true,fake.fetcher,()=>new Date(NOW));
-  assert.equal(report.observations,0);assert.equal(report.results,1);assert.equal(fake.calls.some(u=>u.endsWith('/participants')),false);
+  assert.equal(report.observations,0);assert.equal(report.results,1);assert.equal(fake.calls.some(u=>u.endsWith('/participants')),true);
 });
 test('upstream failure remains inside this service, is logged and releases the lease',async()=>{
   const db=new LocalD1();const report=await collect(db,true,async()=>new Response('bad',{status:503}),()=>new Date(NOW));
@@ -201,19 +152,19 @@ test('delivered dashboard script executes and renders counters, races and multil
   const script=html.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1];
   assert.ok(script);
   const element=()=>({textContent:'',href:'',children:[],replaceChildren(){this.children=[];},append(child){this.children.push(child);}});
-  const ids=['observations','eligible','courses','races','runs','export','collect','refresh','message'];
+  const ids=['observations','eligible','courses','races','runs','export','collect','refresh','message','model','proposals','scorecard','history'];
   const elements=Object.fromEntries(ids.map(id=>[id,element()]));
-  const payload={totals:{observations:3,eligible:2,qualified_races:1},latest:[{race_id:RID,edition:'T_MATIN',observed_at:NOW,selection8:[8,2,3,4,5,6,7,1],eligible:true,reasons:[]}],
+  const payload={model:null,prospective:{summary:{triples_success:0,triples_scored:0,quartets_success:0,quartets_scored:0,abstentions:0},history:[]},totals:{observations:3,eligible:2,qualified_races:1},latest:[{race_id:RID,edition:'T_MATIN',observed_at:NOW,selection8:[8,2,3,4,5,6,7,1],eligible:true,reasons:[]}],
     runs:[{started_at:NOW,status:'OK',details_json:'{}'},{started_at:START,status:'OK',details_json:'{}'}]};
   let requests=0;
-  const context=createContext({document:{getElementById:id=>elements[id],createElement:element},fetch:async url=>{
+  const context=createContext({setInterval(){},document:{getElementById:id=>elements[id],createElement:element},fetch:async url=>{
     assert.equal(url,'/api/status');requests++;return {ok:true,json:async()=>payload};
   }});
   new Script(script).runInContext(context);
   await new Promise(resolve=>setImmediate(resolve));
   assert.equal(elements.observations.textContent,3);assert.equal(elements.eligible.textContent,2);assert.equal(elements.courses.textContent,1);
   assert.equal(elements.races.children.length,1);assert.equal(elements.races.children[0].children[0].textContent,RID);
-  assert.equal(elements.runs.textContent,`${NOW} OK {}\n${START} OK {}`);
+  assert.equal(elements.runs.textContent,`${NOW} OK \u2014 0 observation(s), 0 d\u00e9cision(s), 0 arriv\u00e9e(s)\n${START} OK \u2014 0 observation(s), 0 d\u00e9cision(s), 0 arriv\u00e9e(s)`);
   assert.match(elements.export.href,/^\/api\/export\?date=\d{4}-\d{2}-\d{2}$/);
   await elements.refresh.onclick();assert.equal(requests,2);
   assert.equal(elements.message.textContent,'');

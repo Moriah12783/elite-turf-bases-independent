@@ -1,0 +1,418 @@
+{
+  "created_at": "2026-09-26T07:46:09.177Z",
+  "decision_protocol": "T_MINUS_5_MINUTES_LAST_OBSERVATION_MAX_AGE_12_MINUTES",
+  "interpretation": "Retrospective chronological pilot; not an independent prospective validation. No tuning on test outcomes.",
+  "model": {
+    "schema": "elite-bases-model-v1",
+    "trained_at": "2026-09-26T07:46:09.177Z",
+    "training_cutoff": "2026-09-25T18:37:18.668Z",
+    "feature_names": [
+      "log_market",
+      "moteur_correction",
+      "recent_top5",
+      "incident_free",
+      "odds_shortening"
+    ],
+    "coefficients": [
+      0.9939917512258603,
+      0.5009565365503176,
+      0.2942336253548146,
+      0.2554853557644425,
+      0.0972349972005054
+    ],
+    "training_races": 5,
+    "training_ids": [
+      "R1C1_21092026_LA CAPELLE",
+      "R1C4_22092026_AUTEUIL",
+      "R1C1_23092026_ARGENTAN",
+      "R1C1_24092026_COMPIEGNE",
+      "R1C4_25092026_VINCENNES"
+    ],
+    "dataset_sha256": "6c0c4c0bb5004bad4e4cfe016f84f59e94bb55b271525aabf7b5604e98eb682e",
+    "validation": "EXPERIMENTAL_SMALL_SAMPLE",
+    "method": "RIDGE_PLACKETT_LUCE",
+    "regularization": 1.5,
+    "id": "pl-v1-86256ab03e7e66b7a87b"
+  },
+  "excluded": [
+    {
+      "race": "R1C3_26092026_AUTEUIL",
+      "reason": "NO_OBSERVATION_IN_T5_WINDOW"
+    }
+  ],
+  "examples": [
+    {
+      "race_id": "R1C1_21092026_LA CAPELLE",
+      "observation_id": "c9f48cb46f2e3fea82e7e954d72538ea5390cd9887ee4871e3fd45bb3ebecb98",
+      "observed_at": "2026-09-21T11:47:39.547Z",
+      "result_observed_at": "2026-09-21T12:17:39.296Z"
+    },
+    {
+      "race_id": "R1C4_22092026_AUTEUIL",
+      "observation_id": "35f8c6722aedbcb3cd4715fcb58c4ca66516a65e780e48499408bd69c44983d6",
+      "observed_at": "2026-09-22T11:47:12.946Z",
+      "result_observed_at": "2026-09-22T12:17:25.560Z"
+    },
+    {
+      "race_id": "R1C1_23092026_ARGENTAN",
+      "observation_id": "7869ea360369eccc243cff3d7368495fc5940c42605dd18dc8c4956d964bb388",
+      "observed_at": "2026-09-23T11:47:11.487Z",
+      "result_observed_at": "2026-09-23T12:17:15.921Z"
+    },
+    {
+      "race_id": "R1C1_24092026_COMPIEGNE",
+      "observation_id": "538a77305bafb01f5d727f85b705a3bf9463fc2f74f469bfb48b8db925e54648",
+      "observed_at": "2026-09-24T11:47:16.322Z",
+      "result_observed_at": "2026-09-24T12:07:11.986Z"
+    },
+    {
+      "race_id": "R1C4_25092026_VINCENNES",
+      "observation_id": "c8dd181324a2b1a060d4f0140215eb3b335acb23d910505dc488b026cd62568a",
+      "observed_at": "2026-09-25T18:07:18.095Z",
+      "result_observed_at": "2026-09-25T18:37:18.668Z"
+    }
+  ],
+  "evaluation": {
+    "protocol": "CHRONOLOGICAL_EXPANDING_WINDOW",
+    "warmup_races": 2,
+    "quality": "EXPLORATORY_NOT_VALIDATION",
+    "rows": [
+      {
+        "race_id": "R1C1_23092026_ARGENTAN",
+        "decision_at": "2026-09-23T11:47:11.487Z",
+        "training_races": 2,
+        "training_ids": [
+          "R1C1_21092026_LA CAPELLE",
+          "R1C4_22092026_AUTEUIL"
+        ],
+        "proposal": {
+          "schema": "elite-bases-proposal-v1",
+          "mode": "EXPERIMENTAL",
+          "status": "EXPERIMENTAL",
+          "race_id": "R1C1_23092026_ARGENTAN",
+          "edition": "T15",
+          "created_at": "2026-09-23T11:47:11.487Z",
+          "source_observed_at": "2026-09-23T11:47:11.487Z",
+          "start_at": "2026-09-23T11:55:00.000Z",
+          "valid_until": "2026-09-23T11:54:00.000Z",
+          "observation_id": "7869ea360369eccc243cff3d7368495fc5940c42605dd18dc8c4956d964bb388",
+          "model_id": "pl-v1-2b30004f81bd49550311",
+          "training_races": 2,
+          "selection8": [
+            13,
+            8,
+            12,
+            15,
+            4,
+            9,
+            10,
+            1
+          ],
+          "bases3": [
+            13,
+            8,
+            12
+          ],
+          "bases4": [],
+          "fourth_candidate": 15,
+          "reasons": [
+            "FOURTH_NOT_CONFIRMED"
+          ],
+          "score_kind": "UNCALIBRATED_MODEL_PROBABILITIES",
+          "joint3": 0.2913930029538918,
+          "joint4": 0.11582930793064952,
+          "conditional4": 0.39750202220530884,
+          "candidate_ranking": [
+            {
+              "num": 13,
+              "producer_rank": 1,
+              "market_odds": 4.1,
+              "top5_model_score": 0.8010288352732782
+            },
+            {
+              "num": 8,
+              "producer_rank": 2,
+              "market_odds": 4.5,
+              "top5_model_score": 0.7472869953923904
+            },
+            {
+              "num": 12,
+              "producer_rank": 3,
+              "market_odds": 7.6,
+              "top5_model_score": 0.5404063303620328
+            },
+            {
+              "num": 15,
+              "producer_rank": 4,
+              "market_odds": 10,
+              "top5_model_score": 0.5128424464821348
+            },
+            {
+              "num": 4,
+              "producer_rank": 5,
+              "market_odds": 10,
+              "top5_model_score": 0.4551146262699328
+            },
+            {
+              "num": 9,
+              "producer_rank": 6,
+              "market_odds": 12,
+              "top5_model_score": 0.34542052889834945
+            },
+            {
+              "num": 1,
+              "producer_rank": 8,
+              "market_odds": 19,
+              "top5_model_score": 0.3082719663819473
+            },
+            {
+              "num": 10,
+              "producer_rank": 7,
+              "market_odds": 17,
+              "top5_model_score": 0.27112154831560825
+            }
+          ]
+        },
+        "status": "EXPERIMENTAL",
+        "all3": false,
+        "all4": null,
+        "moteur3": false,
+        "moteur4": false,
+        "market3": false,
+        "market4": false,
+        "result_top5": [
+          13,
+          6,
+          5,
+          12,
+          18
+        ]
+      },
+      {
+        "race_id": "R1C1_24092026_COMPIEGNE",
+        "decision_at": "2026-09-24T11:47:16.322Z",
+        "training_races": 3,
+        "training_ids": [
+          "R1C1_21092026_LA CAPELLE",
+          "R1C4_22092026_AUTEUIL",
+          "R1C1_23092026_ARGENTAN"
+        ],
+        "proposal": {
+          "schema": "elite-bases-proposal-v1",
+          "mode": "EXPERIMENTAL",
+          "status": "EXPERIMENTAL",
+          "race_id": "R1C1_24092026_COMPIEGNE",
+          "edition": "T15",
+          "created_at": "2026-09-24T11:47:16.322Z",
+          "source_observed_at": "2026-09-24T11:47:16.322Z",
+          "start_at": "2026-09-24T11:55:00.000Z",
+          "valid_until": "2026-09-24T11:54:00.000Z",
+          "observation_id": "538a77305bafb01f5d727f85b705a3bf9463fc2f74f469bfb48b8db925e54648",
+          "model_id": "pl-v1-9843a90ade789cf3c47e",
+          "training_races": 3,
+          "selection8": [
+            8,
+            16,
+            6,
+            4,
+            10,
+            7,
+            3,
+            13
+          ],
+          "bases3": [
+            8,
+            16,
+            4
+          ],
+          "bases4": [],
+          "fourth_candidate": 6,
+          "reasons": [
+            "FOURTH_NOT_CONFIRMED"
+          ],
+          "score_kind": "UNCALIBRATED_MODEL_PROBABILITIES",
+          "joint3": 0.11387003991975958,
+          "joint4": 0.033565527588944336,
+          "conditional4": 0.29477049110193376,
+          "candidate_ranking": [
+            {
+              "num": 8,
+              "producer_rank": 1,
+              "market_odds": 6.3,
+              "top5_model_score": 0.583842149318869
+            },
+            {
+              "num": 16,
+              "producer_rank": 2,
+              "market_odds": 7,
+              "top5_model_score": 0.555293272037433
+            },
+            {
+              "num": 4,
+              "producer_rank": 4,
+              "market_odds": 8.7,
+              "top5_model_score": 0.46143239017211
+            },
+            {
+              "num": 6,
+              "producer_rank": 3,
+              "market_odds": 9.3,
+              "top5_model_score": 0.45718521979131604
+            },
+            {
+              "num": 10,
+              "producer_rank": 5,
+              "market_odds": 9.1,
+              "top5_model_score": 0.4389645458680616
+            },
+            {
+              "num": 7,
+              "producer_rank": 6,
+              "market_odds": 10,
+              "top5_model_score": 0.41082237983927994
+            },
+            {
+              "num": 3,
+              "producer_rank": 7,
+              "market_odds": 12,
+              "top5_model_score": 0.3782047065027889
+            },
+            {
+              "num": 13,
+              "producer_rank": 8,
+              "market_odds": 13,
+              "top5_model_score": 0.33407663507150975
+            }
+          ]
+        },
+        "status": "EXPERIMENTAL",
+        "all3": true,
+        "all4": null,
+        "moteur3": false,
+        "moteur4": false,
+        "market3": true,
+        "market4": true,
+        "result_top5": [
+          13,
+          8,
+          10,
+          4,
+          16
+        ]
+      },
+      {
+        "race_id": "R1C4_25092026_VINCENNES",
+        "decision_at": "2026-09-25T18:07:18.095Z",
+        "training_races": 4,
+        "training_ids": [
+          "R1C1_21092026_LA CAPELLE",
+          "R1C4_22092026_AUTEUIL",
+          "R1C1_23092026_ARGENTAN",
+          "R1C1_24092026_COMPIEGNE"
+        ],
+        "proposal": {
+          "schema": "elite-bases-proposal-v1",
+          "mode": "EXPERIMENTAL",
+          "status": "EXPERIMENTAL",
+          "race_id": "R1C4_25092026_VINCENNES",
+          "edition": "T15",
+          "created_at": "2026-09-25T18:07:18.095Z",
+          "source_observed_at": "2026-09-25T18:07:18.095Z",
+          "start_at": "2026-09-25T18:17:00.000Z",
+          "valid_until": "2026-09-25T18:16:00.000Z",
+          "observation_id": "c8dd181324a2b1a060d4f0140215eb3b335acb23d910505dc488b026cd62568a",
+          "model_id": "pl-v1-f5738e1bd8eaa0437ed2",
+          "training_races": 4,
+          "selection8": [
+            18,
+            9,
+            13,
+            12,
+            15,
+            8,
+            7,
+            11
+          ],
+          "bases3": [
+            9,
+            18,
+            13
+          ],
+          "bases4": [],
+          "fourth_candidate": 12,
+          "reasons": [
+            "FOURTH_NOT_CONFIRMED"
+          ],
+          "score_kind": "UNCALIBRATED_MODEL_PROBABILITIES",
+          "joint3": 0.22211225361039555,
+          "joint4": 0.07269462623553405,
+          "conditional4": 0.327287779282303,
+          "candidate_ranking": [
+            {
+              "num": 9,
+              "producer_rank": 2,
+              "market_odds": 6.1,
+              "top5_model_score": 0.6714982748369019
+            },
+            {
+              "num": 18,
+              "producer_rank": 1,
+              "market_odds": 5,
+              "top5_model_score": 0.6336471249826525
+            },
+            {
+              "num": 13,
+              "producer_rank": 3,
+              "market_odds": 5.7,
+              "top5_model_score": 0.6063472119325916
+            },
+            {
+              "num": 12,
+              "producer_rank": 4,
+              "market_odds": 8.8,
+              "top5_model_score": 0.4517504869484121
+            },
+            {
+              "num": 15,
+              "producer_rank": 5,
+              "market_odds": 13,
+              "top5_model_score": 0.349652970591163
+            },
+            {
+              "num": 7,
+              "producer_rank": 7,
+              "market_odds": 15,
+              "top5_model_score": 0.33598804720571346
+            },
+            {
+              "num": 8,
+              "producer_rank": 6,
+              "market_odds": 13,
+              "top5_model_score": 0.3107786310482617
+            },
+            {
+              "num": 11,
+              "producer_rank": 8,
+              "market_odds": 18,
+              "top5_model_score": 0.29621813441199457
+            }
+          ]
+        },
+        "status": "EXPERIMENTAL",
+        "all3": false,
+        "all4": null,
+        "moteur3": false,
+        "moteur4": false,
+        "market3": false,
+        "market4": false,
+        "result_top5": [
+          13,
+          11,
+          12,
+          10,
+          15
+        ]
+      }
+    ]
+  }
+}
