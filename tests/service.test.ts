@@ -152,7 +152,7 @@ test('delivered dashboard script executes and renders counters, races and multil
   const script=html.match(/<script[^>]*>([\s\S]*?)<\/script>/)?.[1];
   assert.ok(script);
   const element=()=>({textContent:'',href:'',children:[],replaceChildren(){this.children=[];},append(child){this.children.push(child);}});
-  const ids=['observations','eligible','courses','races','runs','export','collect','refresh','message','model','proposals','scorecard','history'];
+  const ids=['observations','eligible','courses','races','runs','export','collect','refresh','message','model','proposals','scorecard','history','edition-counts','edition-common','edition-summary','edition-comparison','edition-history'];
   const elements=Object.fromEntries(ids.map(id=>[id,element()]));
   const payload={model:null,prospective:{summary:{triples_success:0,triples_scored:0,quartets_success:0,quartets_scored:0,abstentions:0},history:[]},totals:{observations:3,eligible:2,qualified_races:1},latest:[{race_id:RID,edition:'T_MATIN',observed_at:NOW,selection8:[8,2,3,4,5,6,7,1],eligible:true,reasons:[]}],
     runs:[{started_at:NOW,status:'OK',details_json:'{}'},{started_at:START,status:'OK',details_json:'{}'}]};

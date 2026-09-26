@@ -24,7 +24,7 @@ export function snapshot() {const f=fixtures();return buildSnapshot(f.course,f.r
 /** SQLite-backed minimal implementation of the D1 methods used by the service. */
 export class LocalD1 {
   sqlite=new DatabaseSync(':memory:');
-  constructor(){for(const file of ['0001_independent.sql','0002_proposals.sql'])this.sqlite.exec(readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8'));}
+  constructor(withEditions=true){for(const file of ['0001_independent.sql','0002_proposals.sql',...(withEditions?['0003_edition_references.sql']:[])])this.sqlite.exec(readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8'));}
   prepare(sql:string){return new Statement(this,sql,[]);}
   async batch(statements:Statement[]){
     this.sqlite.exec('BEGIN');

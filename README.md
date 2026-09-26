@@ -1,7 +1,7 @@
 # Elite Turf — service indépendant des bases Quinté+
 
-Version 0.2 : collecte prospective, sélecteur de trois bases et quatrième
-conditionnelle, historique privé et comparaison aux arrivées officielles.
+Version 0.3 : collecte prospective, sélecteur de trois bases et quatrième
+conditionnelle, historique privé, bilan par édition et comparaison aux arrivées officielles.
 **Modèle pilote entraîné sur cinq courses : ses performances ne sont pas validées.
 Les propositions restent des essais privés, sans publication aux abonnés.**
 
@@ -47,6 +47,40 @@ démontre aucun avantage sur le marché. Voir `reports/pilot-evaluation.json`.
 Le modèle déployé a ensuite été ajusté sur les cinq courses terminées pour être
 mesuré sur les courses futures, qui restent distinctes de l'apprentissage.
 
+## Archives et bilan par édition
+
+Toutes les décisions successives étaient déjà archivées avec l'édition du Moteur,
+les huit candidats, les bases, les données sources, les heures et le modèle.
+La version 0.3 ajoute `edition_references` : une référence immuable par course et
+par édition Matin / T90 / T30 / T15. La règle `FIRST_RECORDED_EDITION_V1` retient
+la **première décision réellement enregistrée**, même s'il s'agit d'une abstention.
+Les recalculs restent dans `proposals` et ne remplacent jamais cette référence.
+
+Un déclencheur SQLite inscrit la référence dans la même transaction que la première
+proposition. La migration reprend les premières décisions déjà présentes, sans
+entraîner de modèle, générer de pronostic historique ni modifier une proposition.
+Les journées de collecte sans sélecteur ne deviennent donc pas des résultats de bases.
+
+Le libellé désigne l'édition observée du Moteur : il ne garantit pas une capture
+exactement 90, 30 ou 15 minutes avant départ. L'heure réelle de calcul et le nombre
+de minutes avant départ sont conservés et exportés. L'analyse peut ainsi contrôler
+les retards de collecte et l'heure effective d'utilisation par les abonnés.
+
+Le bilan affiche les références, les trios/quatuors complets avec leurs dénominateurs,
+les abstentions, les arrivées attendues et les exclusions. Les courses absentes
+d'une édition ne sont pas considérées comme des échecs. Une comparaison séparée
+utilise uniquement les courses évaluables dans **les quatre éditions** ; trios
+et quatuors ont chacun leur ensemble de courses communes. Les agrégats par version
+de modèle sont disponibles dans l'export afin de ne pas confondre un changement
+de modèle avec l'effet de l'édition.
+
+Le tableau couvre par défaut les 365 derniers jours et montre les 40 références
+les plus récentes. L'export accepte une plage de dates de 366 jours au maximum,
+avec un plafond explicite de 2 000 références par requête. Aucune purge des archives
+n'est programmée ; les périodes antérieures restent accessibles avec leurs dates.
+Le bilan T−5 reste affiché séparément et suit sa règle de dernière proposition
+fraîche avant T−5. Il ne remplace pas le bilan des premières décisions par édition.
+
 ## Isolation
 
 - Worker et base D1 dédiés : `elite-turf-bases-independent`.
@@ -86,10 +120,11 @@ compressées et dédupliquées ; leur présence sert à l'audit, pas à l'entra�
 - `observations` : instant, huit candidats, variables admises et qualification.
 - `results` : arrivées officielles, finalité et versions réellement différentes.
 - `models`, `proposals` : modèles figés et décisions horodatées, sources et empreintes.
+- `edition_references` : première décision par course/édition, liée à la proposition archivée.
 - `runs` : état de chaque tentative de collecte.
 - `leases`, `control` : verrou d'exécution et limitation de fréquence du service.
 
-Les observations, sources, résultats, modèles et propositions refusent UPDATE, DELETE et REPLACE.
+Les observations, sources, résultats, modèles, propositions et références d'édition refusent UPDATE, DELETE et REPLACE.
 L'écriture d'une observation et de ses sources est atomique avec D1 batch.
 Les empreintes sont contrôlées à la lecture des observations. Il s'agit d'une
 protection applicative contre les erreurs et corruptions, pas d'une attestation
@@ -109,7 +144,8 @@ ne sont pas mises en cache et les requêtes de collecte d'une autre origine sont
 
 - `/` : tableau de contrôle privé.
 - `GET /api/status` : propositions actives, derniers passages, qualifications et bilan prospectif.
-- `GET /api/export?date=AAAA-MM-JJ` : observations, propositions, modèle actif et résultats séparés.
+- `GET /api/editions?from=AAAA-MM-JJ&to=AAAA-MM-JJ` : références, bilan par édition, courses communes et ventilation par modèle.
+- `GET /api/export?date=AAAA-MM-JJ` : toutes les observations et propositions du jour, références, modèles utilisés et résultats séparés.
 - `POST /api/collect` : collecte manuelle, soumise au même verrou et délai minimal.
 
 Les observations exportées ne sont pas automatiquement un jeu d'apprentissage

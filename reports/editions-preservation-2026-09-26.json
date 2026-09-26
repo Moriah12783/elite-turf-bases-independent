@@ -1,0 +1,12 @@
+{
+  "observations": {
+    "before": 193,
+    "after": 193,
+    "old_hashes_preserved": true
+  },
+  "proposals": {
+    "before": 3,
+    "after": 3,
+    "old_hashes_preserved": true
+  }
+}

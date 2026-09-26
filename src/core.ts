@@ -1,6 +1,6 @@
 /** Pure external-source adapters. Never import or run a producer's code. */
 export type ObjectData = Record<string, unknown>;
-export const VERSION = '0.2.0';
+export const VERSION = '0.3.0';
 export const PRONO_URL = 'https://prono.elite-turf.fr/';
 export const PMU_ROOT = 'https://online.turfinfo.api.pmu.fr/rest/client/7/programme';
 export const MAX_BYTES = 12 * 1024 * 1024;
